@@ -1,0 +1,18 @@
+<table>
+    <thead>
+        <tr>
+            <th>Namespace</th>
+            <th>VM Name</th>
+            <th>Message</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for vm in vms %}
+        <tr>
+            <td>{{ vm.namespace }}</td>
+            <td>{{ vm.vm_name }}</td>
+            <td>{{ vm.message }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

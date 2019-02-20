@@ -1,0 +1,16 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="cmdb">
+    <div class="row">
+        <div class="column column-50 column-offset-25">
+            <h1>CMDB</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="column column-50 column-offset-25">
+            {% include 'cmdb_table.html' %}
+        </div>
+    </div>
+</div>
+{% endblock %}
