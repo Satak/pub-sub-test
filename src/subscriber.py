@@ -6,8 +6,9 @@ import requests
 project_id = getenv('GCP_PROJECT')
 subscription_name = getenv('SUBSCRIPTION_NAME')
 topic_name = getenv('TOPIC_NAME')
+SERVER_ADDRESS = getenv('SERVER_ADDRESS', 'http://localhost:5000')
 
-url = 'http://localhost:5000/cmdb'  # change this to your dev server
+url = f'{SERVER_ADDRESS}/cmdb'
 subscriber = pubsub_v1.SubscriberClient()
 subscription_path = subscriber.subscription_path(project_id, subscription_name)
 
