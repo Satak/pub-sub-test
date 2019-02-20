@@ -5,7 +5,7 @@ import sqlite3
 from os import getenv
 
 app = Flask(__name__)
-app.secret_key = getenv('SECRET')
+app.secret_key = getenv('SECRET', 'my-super-secret-secretkey')
 
 project_id = getenv('GCP_PROJECT')
 subscription_name = getenv('SUBSCRIPTION_NAME')
@@ -19,9 +19,11 @@ subscription_path = subscriber.subscription_path(project_id, subscription_name)
 CMDB_DATABASE = 'cmdb.sqlite'
 CREATE_TABLE = """
     CREATE TABLE IF NOT EXISTS vms (
-        vm_name TEXT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE NOT NULL,
+        vm_name TEXT NOT NULL,
         namespace TEXT NOT NULL,
-        message TEXT
+        message TEXT,
+        UNIQUE (vm_name, namespace)
     );
 """
 INSERT_RECORD = """
@@ -29,7 +31,9 @@ INSERT_RECORD = """
     VALUES (:namespace, :vm_name, :message)
 """
 DELETE_RECORD = """
-    DELETE FROM vms WHERE vm_name = :vm_name
+    DELETE FROM vms WHERE
+    vm_name = :vm_name AND
+    namespace = :namespace
 """
 CUSTOMERS = [
     'Customer 1',
@@ -51,30 +55,35 @@ def dict_factory(cursor, row):
     return d
 
 
-def delete_record(vm_name):
+def delete_record(vm_name, namespace):
+    data = {
+        'vm_name': vm_name,
+        'namespace': namespace
+    }
     try:
         with sqlite3.connect(CMDB_DATABASE) as con:
-            con.row_factory = dict_factory
             cur = con.cursor()
-            cur.execute(DELETE_RECORD, {'vm_name': vm_name})
-        return {
+            cur.execute(DELETE_RECORD, data)
+        res = {
             'ok': True,
             'message': f'{vm_name} deleted',
             'status_code': 200
         }
     except Exception as err:
-        return {
+        res = {
             'ok': False,
             'error': str(err),
             'status_code': 400
         }
+    print(res)
+    return res
 
 
 def get_vms():
     with sqlite3.connect(CMDB_DATABASE) as con:
         con.row_factory = dict_factory
         cur = con.cursor()
-        cur.execute("SELECT vm_name, namespace, message FROM vms")
+        cur.execute("SELECT id, vm_name, namespace, message FROM vms")
         vms = cur.fetchall()
         return vms
 
@@ -101,7 +110,6 @@ def insert_cmdb_record(namespace, vm_name, message):
     try:
         with sqlite3.connect(CMDB_DATABASE) as con:
             cur = con.cursor()
-            cur.execute(CREATE_TABLE)
             cur.execute(INSERT_RECORD, record)
             return {
                 'ok': True,
@@ -110,6 +118,7 @@ def insert_cmdb_record(namespace, vm_name, message):
             }
     except Exception as err:
         err_msg = f'Something went wrong while inserting data {err}'
+        print(err_msg)
         return {
             'ok': False,
             'error': err_msg,
@@ -160,7 +169,7 @@ def cmdb():
         )
         return jsonify(res), res['status_code']
     elif data['action'] == 'delete':
-        res = delete_record(vm_name=data['vm_name'])
+        res = delete_record(vm_name=data['vm_name'], namespace=data['namespace'])
         return jsonify(res), res['status_code']
     else:
         return jsonify({'error': 'action not supported yet'}), 400

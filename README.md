@@ -5,6 +5,9 @@ This is a test app that utilizes GCP's Pub/Sub event buss to create and modify C
 Official documentation:
 <https://cloud.google.com/pubsub/>
 
+If you just start the flask dev server (`main.py`) and not the `subscription.py`, then all the messages will go to the Pub/Sub queue and are not processed or acknowledged. You can see the unprocessed messages in the `/messages` view. Every 10 seconds they appear there so you need to refresh the page to see them. You can acknowledge the messages adhoc by pressing the `ACK` button.
+When you start the `subscription.py` subscriber all messages are acknowledged that can be processed and those actions that are not supported (`get` and `update`) are left on the queue. You need to stop the async `subscription.py` to able to see the messages again in the messages view. 
+
 ## Prerequisites
 
 - Basic understanding of Google Cloud, it's components, Pub/Sub, and IAM

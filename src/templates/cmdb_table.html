@@ -1,6 +1,7 @@
 <table>
     <thead>
         <tr>
+            <th>ID</th>
             <th>Namespace</th>
             <th>VM Name</th>
             <th>Message</th>
@@ -9,6 +10,7 @@
     <tbody>
         {% for vm in vms %}
         <tr>
+            <td>{{ vm.id }}</td>
             <td>{{ vm.namespace }}</td>
             <td>{{ vm.vm_name }}</td>
             <td>{{ vm.message }}</td>
