@@ -28,7 +28,7 @@ def callback(message):
         print('\n')
         message.ack()
     else:
-        print('Something went wrong:', str(res.content))
+        print(f'Web request not ok for {message}:', res.json(), '\n')
 
 subscriber.subscribe(subscription_path, callback=callback)
 

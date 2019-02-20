@@ -5,6 +5,8 @@
             <th>VM Name</th>
             <th>Action</th>
             <th>Message</th>
+            <th>Error</th>
+            <th>Ack</th>
         </tr>
     </thead>
     <tbody>
@@ -14,6 +16,8 @@
             <td>{{ message.vm_name }}</td>
             <td>{{ message.action }}</td>
             <td>{{ message.message }}</td>
+            <td>{{ message.error }}</td>
+            <td>{% include 'ack_form.html' %}</td>
         </tr>
         {% endfor %}
     </tbody>

@@ -16,6 +16,27 @@ topic_path = publisher.topic_path(project_id, topic_name)
 
 subscriber = pubsub_v1.SubscriberClient()
 subscription_path = subscriber.subscription_path(project_id, subscription_name)
+CMDB_DATABASE = 'cmdb.sqlite'
+CREATE_TABLE = """
+    CREATE TABLE IF NOT EXISTS vms (
+        vm_name TEXT PRIMARY KEY,
+        namespace TEXT NOT NULL,
+        message TEXT
+    );
+"""
+INSERT_RECORD = """
+    INSERT INTO vms (namespace, vm_name, message)
+    VALUES (:namespace, :vm_name, :message)
+"""
+DELETE_RECORD = """
+    DELETE FROM vms WHERE vm_name = :vm_name
+"""
+
+
+def execute_sql_cmd(cmd):
+    with sqlite3.connect(CMDB_DATABASE) as con:
+        cur = con.cursor()
+        cur.execute(cmd)
 
 
 def dict_factory(cursor, row):
@@ -25,8 +46,27 @@ def dict_factory(cursor, row):
     return d
 
 
+def delete_record(vm_name):
+    try:
+        with sqlite3.connect(CMDB_DATABASE) as con:
+            con.row_factory = dict_factory
+            cur = con.cursor()
+            cur.execute(DELETE_RECORD, {'vm_name': vm_name})
+        return {
+            'ok': True,
+            'message': f'{vm_name} deleted',
+            'status_code': 200
+        }
+    except Exception as err:
+        return {
+            'ok': False,
+            'error': str(err),
+            'status_code': 400
+        }
+
+
 def get_vms():
-    with sqlite3.connect('cmdb.sqlite') as con:
+    with sqlite3.connect(CMDB_DATABASE) as con:
         con.row_factory = dict_factory
         cur = con.cursor()
         cur.execute("SELECT vm_name, namespace, message FROM vms")
@@ -42,6 +82,7 @@ def get_messages_sync():
             'namespace': received_message.message.attributes['namespace'],
             'vm_name': received_message.message.attributes['vm_name'],
             'action': received_message.message.attributes['action'],
+            'message_id': received_message.message.attributes['message_id'],
             'ack_id': received_message.ack_id
         } for received_message in response.received_messages]
 
@@ -53,15 +94,10 @@ def insert_cmdb_record(namespace, vm_name, message):
         'message': message
     }
     try:
-        with sqlite3.connect('cmdb.sqlite') as con:
+        with sqlite3.connect(CMDB_DATABASE) as con:
             cur = con.cursor()
-            cur.execute(
-                """
-                  INSERT INTO vms (namespace, vm_name, message)
-                  VALUES (:namespace, :vm_name, :message)
-                """,
-                record
-            )
+            cur.execute(CREATE_TABLE)
+            cur.execute(INSERT_RECORD, record)
             return {
                 'ok': True,
                 'message': 'record inserted successfully',
@@ -118,8 +154,26 @@ def cmdb():
             message=data['message']
         )
         return jsonify(res), res['status_code']
+    elif data['action'] == 'delete':
+        res = delete_record(vm_name=data['vm_name'])
+        return jsonify(res), res['status_code']
     else:
         return jsonify({'error': 'action not supported yet'}), 400
+
+
+def ack_message(ack_id):
+    try:
+        subscriber.acknowledge(subscription_path, [ack_id])
+        return f'Message {ack_id[0:10]}... Acknowledged'
+    except Exception as err:
+        return f'ERROR while trying to acknowledge: {err}'
+
+
+@app.route('/ack/<string:ack_id>', methods=['POST'])
+def ack_message_route(ack_id):
+    res = ack_message(ack_id)
+    flash(res)
+    return redirect(url_for('message'))
 
 
 @app.route('/message')
@@ -141,4 +195,5 @@ def post_message():
 
 
 if __name__ == '__main__':
+    execute_sql_cmd(CREATE_TABLE)
     app.run(debug=True, threaded=True)
