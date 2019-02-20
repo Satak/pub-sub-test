@@ -31,6 +31,11 @@ INSERT_RECORD = """
 DELETE_RECORD = """
     DELETE FROM vms WHERE vm_name = :vm_name
 """
+CUSTOMERS = [
+    'Customer 1',
+    'Customer 2',
+    'Customer 3',
+]
 
 
 def execute_sql_cmd(cmd):
@@ -178,7 +183,7 @@ def ack_message_route(ack_id):
 
 @app.route('/message')
 def message():
-    return render_template('message.html')
+    return render_template('message.html', customers=CUSTOMERS)
 
 
 @app.route('/message', methods=['POST'])

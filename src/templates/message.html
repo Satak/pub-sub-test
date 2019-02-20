@@ -13,10 +13,9 @@
                 <fieldset>
                     <label for="namespace">Namespace</label>
                     <select name="namespace">
-                        <option value="mazda">Mazda</option>
-                        <option value="mab">MAB</option>
-                        <option value="demo">Demo</option>
-                        <option value="lowell">Lowell</option>
+                        {% for customer in customers %}
+                        <option value="{{customer}}">{{customer}}</option>
+                        {% endfor %}
                     </select>
                     <label for="action">Action</label>
                     <select name="action">
