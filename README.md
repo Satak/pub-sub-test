@@ -1,12 +1,18 @@
 # GCP Pub/Sub Test App
 
-This is a test app that utilizes GCP's Pub/Sub event buss to create and modify CMDB records. CMDb is basically a local sqlite database (local file called `cmdb.sqlite`) that the flask app creates.
+This is a test app that utilizes GCP's Pub/Sub event bus to create and modify CMDB records. CMDB in this case is basically a local sqlite database (file called `cmdb.sqlite`) that the flask app creates.
 
 Official documentation:
 <https://cloud.google.com/pubsub/>
 
-If you just start the flask dev server (`main.py`) and not the `subscription.py`, then all the messages will go to the Pub/Sub queue and are not processed or acknowledged. You can see the unprocessed messages in the `/messages` view. Every 10 seconds they appear there so you need to refresh the page to see them. You can acknowledge the messages adhoc by pressing the `ACK` button.
-When you start the `subscription.py` subscriber all messages are acknowledged that can be processed and those actions that are not supported (`get` and `update`) are left on the queue. You need to stop the async `subscription.py` to able to see the messages again in the messages view. 
+If you just start the flask dev server by running `python main.py` and not the `subscription.py`, then all the messages will go to the Pub/Sub queue and are not processed or acknowledged.
+
+You can see the unprocessed messages in the `/messages` view. By default every 10 seconds they are resend to the queue so you may need to refresh the page couple times to see them. You can acknowledge the messages ad-hoc by pressing the `ACK` button.
+
+When you run the Python script `subscription.py` to start the subscriber, then all the messages that can be processed are acknowledged and those messages with actions that are not supported (`get` and `update`) are left on the queue as unacknowledged. You need to stop the async subscriber `subscription.py` to able to see the messages again in the messages view.
+
+![Pub Sub image](/img/send-msg-ui.png)
+![Pub Sub image](/img/ui.png)
 
 ## Prerequisites
 
@@ -16,11 +22,11 @@ When you start the `subscription.py` subscriber all messages are acknowledged th
   - Pub/Sub enabled
   - Pub/Sub topic created
   - Pub/Sub subscription (pull) created
-  - GCP service account created with these roles:
+  - GCP service account created and json key downloaded with these roles:
     - `Pub/Sub Publisher`
     - `Pub/Sub Subscriber`
     - `Pub/Sub Viewer`
-- Python installed
+- Python 3.6=< (scripts utilizes Python 3.6 f-strings)
   - `flask` library
   - `request` library
   - `google-cloud-pubsub` library
@@ -29,16 +35,17 @@ When you start the `subscription.py` subscriber all messages are acknowledged th
 
 You need to setup some environment variables first:
 
-- `SECRET` - flask `secret_key` (use `os.urandom(24)`)
+- `GOOGLE_APPLICATION_CREDENTIALS` - path to your GCP service account json file
+- `SECRET` - flask `secret_key` (use any string or more securely `os.urandom(24)`)
 - `GCP_PROJECT` - GCP project ID
-- `SUBSCRIPTION_NAME` - GCP Pub/Sub subscription name
-- `TOPIC_NAME` - GCP Pub/Sub topic name
+- `SUBSCRIPTION_NAME` - GCP Pub/Sub subscription name that you have created
+- `TOPIC_NAME` - GCP Pub/Sub topic name that you have created
 - `SERVER_ADDRESS` - Web server address where the `/cmdb` route exists. Default is the local flask dev server `http://localhost:5000`
 
 ## Components
 
-- `main.py` to run the Flask dev server
-- `subscriber.py` run the Pub/Sub async subscriber that pulls the messages from Pub/Sub and sends them to `/cmdb` route. If this is not running then the messages from the flask web server goes to the Pub/Sub message buss and are not handled.
+- `main.py` to run the Flask dev server.
+- `subscriber.py` to run the Pub/Sub async subscriber that pulls the messages from Pub/Sub and sends them to `/cmdb` route. If this script is not running, then the messages from the flask web server just goes to the Pub/Sub message bus and they are not processed. Can be seen in the `/messages` view.
 
 ## Architecture
 

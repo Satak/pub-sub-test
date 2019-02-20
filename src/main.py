@@ -6,7 +6,6 @@ from os import getenv
 
 app = Flask(__name__)
 app.secret_key = getenv('SECRET', 'my-super-secret-secretkey')
-
 project_id = getenv('GCP_PROJECT')
 subscription_name = getenv('SUBSCRIPTION_NAME')
 topic_name = getenv('TOPIC_NAME')
@@ -16,6 +15,7 @@ topic_path = publisher.topic_path(project_id, topic_name)
 
 subscriber = pubsub_v1.SubscriberClient()
 subscription_path = subscriber.subscription_path(project_id, subscription_name)
+
 CMDB_DATABASE = 'cmdb.sqlite'
 CREATE_TABLE = """
     CREATE TABLE IF NOT EXISTS vms (
@@ -35,6 +35,8 @@ DELETE_RECORD = """
     vm_name = :vm_name AND
     namespace = :namespace
 """
+
+# NOTE: you can modify this list
 CUSTOMERS = [
     'Customer 1',
     'Customer 2',
