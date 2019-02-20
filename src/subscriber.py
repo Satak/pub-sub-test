@@ -1,16 +1,17 @@
 import time
-from os import getenv
 from google.cloud import pubsub_v1
 import requests
 
-project_id = getenv('GCP_PROJECT')
-subscription_name = getenv('SUBSCRIPTION_NAME')
-topic_name = getenv('TOPIC_NAME')
-SERVER_ADDRESS = getenv('SERVER_ADDRESS', 'http://localhost:5000')
+from conf import (
+    PROJECT_ID,
+    SUBSCRIPTION_NAME,
+    TOPIC_NAME,
+    SERVER_ADDRESS
+)
 
-url = f'{SERVER_ADDRESS}/cmdb'
+CMDB_URL_ENDPOINT = f'{SERVER_ADDRESS}/cmdb'
 subscriber = pubsub_v1.SubscriberClient()
-subscription_path = subscriber.subscription_path(project_id, subscription_name)
+subscription_path = subscriber.subscription_path(PROJECT_ID, SUBSCRIPTION_NAME)
 
 
 def callback(message):
@@ -20,7 +21,7 @@ def callback(message):
         'message': message.data.decode(),
         'vm_name': message.attributes['vm_name']
     }
-    res = requests.post(url, json=json_data)
+    res = requests.post(CMDB_URL_ENDPOINT, json=json_data)
     if res.ok:
         print('Data:', message.data.decode())
         print('Custom attributes:', message.attributes)
