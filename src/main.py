@@ -144,11 +144,6 @@ def root():
     return redirect(url_for('message'))
 
 
-@app.route('/api/messages')
-def api_messages():
-    return jsonify(get_messages_sync())
-
-
 @app.route('/messages')
 def messages():
     return render_template('messages.html', messages=get_messages_sync())

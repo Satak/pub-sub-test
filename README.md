@@ -47,6 +47,19 @@ You need to setup some environment variables first:
 - `main.py` to run the Flask dev server.
 - `subscriber.py` to run the Pub/Sub async subscriber that pulls the messages from Pub/Sub and sends them to `/cmdb` route. If this script is not running, then the messages from the flask web server just goes to the Pub/Sub message bus and they are not processed. Can be seen in the `/messages` view.
 
+## Web Server HTTP Routes
+
+| Method   | Route       | Info |
+| -------- |-------------| -----|
+| GET      | `/`         | Redirect to `/message` |
+| GET      | `/message`  | View to send messages to the Pub/Sub queue |
+| POST     | `/message`  | Send message to the Pub/Sub message queue |
+| GET      | `/messages` | View to see the unprocessed messages in the Pub/Sub queue |
+| GET      | `/cmdb`  | View to see the records in the CMDB sqlite database |
+| POST     | `/cmdb`  | Route to handle the form request. If the action type is `create` it will create a new CMDB record and if the type is `delete` it will delete the record based on `vm_name` and `namespace` attributes |
+| POST     | `/ack/<string:ack_id>`  | Acknowledge the message by it's `ack_id` |
+
+
 ## Architecture
 
 ![Pub Sub image](/img/pub_sub.png)
